@@ -1,0 +1,68 @@
+name: Build OpenWrt x86_64
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Space cleanup
+        run: |
+          docker rmi $(docker images -q) 2>/dev/null || true
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* 2>/dev/null || true
+          sudo -E apt-get update
+          sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler antlr3 gperf swig
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          df -h
+
+      - name: Clone OpenWrt source
+        run: |
+          git clone --depth 1 https://github.com/coolsnowwolf/lede -b master openwrt
+
+      - name: Setup feeds
+        run: |
+          cp -f feeds.conf.default openwrt/feeds.conf.default
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Load config
+        run: |
+          cp -f configs/x86_64.config openwrt/.config
+          cd openwrt
+          make defconfig
+
+      - name: Run custom scripts
+        run: |
+          chmod +x diy-part2.sh
+          cd openwrt
+          "${GITHUB_WORKSPACE}/diy-part2.sh"
+
+      - name: Download packages
+        run: |
+          cd openwrt
+          make download -j$(nproc) || make download -j1 V=s
+          find dl -size -1024c -exec rm -f {} \;
+
+      - name: Compile firmware
+        run: |
+          cd openwrt
+          echo "$(nproc) thread build"
+          make -j$(nproc) || make -j1 V=s
+          df -h
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenWrt_x86_64
+          path: openwrt/bin/targets/
