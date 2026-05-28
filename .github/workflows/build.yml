@@ -35,7 +35,11 @@ jobs:
           cp -f feeds.conf.default openwrt/feeds.conf.default
           cd openwrt
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
+          ./scripts/feeds install -a 2>&1 | tee feeds-install.log
+          echo "exit code: ${PIPESTATUS[0]}"
+          echo "=== 最后20行 ==="
+          tail -20 feeds-install.log
+          exit ${PIPESTATUS[0]}
 
       - name: Load config
         run: |
