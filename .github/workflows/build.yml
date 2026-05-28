@@ -35,27 +35,20 @@ jobs:
           cp -f feeds.conf.default openwrt/feeds.conf.default
           cd openwrt
           ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
       - name: Load config
         run: |
+          [ -e files ] && cp -rf files openwrt/files
           cp -f configs/x86_64.config openwrt/.config
-          cd openwrt
-          make defconfig
-
-      - name: Install feeds
-        run: |
-          cd openwrt
-          ./scripts/feeds install -a -f
-
-      - name: Run custom scripts
-        run: |
           chmod +x diy-part2.sh
           cd openwrt
           "${GITHUB_WORKSPACE}/diy-part2.sh"
 
-      - name: Download packages
+      - name: Make defconfig & Download packages
         run: |
           cd openwrt
+          make defconfig
           make download -j$(nproc) || make download -j1 V=s
           find dl -size -1024c -exec rm -f {} \;
 
