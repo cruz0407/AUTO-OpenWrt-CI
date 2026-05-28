@@ -35,13 +35,17 @@ jobs:
           cp -f feeds.conf.default openwrt/feeds.conf.default
           cd openwrt
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
 
       - name: Load config
         run: |
           cp -f configs/x86_64.config openwrt/.config
           cd openwrt
           make defconfig
+
+      - name: Install feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds install -a
 
       - name: Run custom scripts
         run: |
