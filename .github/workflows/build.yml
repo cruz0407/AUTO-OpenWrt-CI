@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -63,8 +65,20 @@ jobs:
           make -j$(nproc) || make -j1 V=s
           df -h
 
-      - name: Upload firmware
-        uses: actions/upload-artifact@v4
+      - name: Organize firmware
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          echo "release_tag=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Upload firmware to release
+        uses: softprops/action-gh-release@v2
         with:
-          name: OpenWrt_x86_64
-          path: openwrt/bin/targets/
+          tag_name: ${{ steps.tag.outputs.release_tag }}
+          files: ${{ env.FIRMWARE }}/*
+          name: OpenWrt x86_64 ${{ steps.tag.outputs.release_tag }}
