@@ -9,6 +9,7 @@ TESTING_VER=$(grep 'KERNEL_TESTING_PATCHVER:=' target/linux/x86/Makefile | awk -
 HIGHEST=$(printf "%s\n%s" "$KERNEL_VER" "$TESTING_VER" | sort -V | tail -1)
 if [ "$HIGHEST" = "$TESTING_VER" ] && [ "$TESTING_VER" != "$KERNEL_VER" ]; then
   sed -i 's/.*CONFIG_TESTING_KERNEL.*/CONFIG_TESTING_KERNEL=y/' .config
+  sed -i 's/.*CONFIG_PACKAGE_kmod-mdio-devres.*/CONFIG_PACKAGE_kmod-mdio-devres=y/' .config
   echo "使用 testing 内核: $TESTING_VER"
 else
   sed -i 's/.*CONFIG_TESTING_KERNEL.*/# CONFIG_TESTING_KERNEL is not set/' .config

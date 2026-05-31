@@ -3,6 +3,9 @@
 # Description: ImmortalWrt 编译前自定义脚本
 #=================================================
 
+# 修复 golang 版本过低导致 xray-core 等包编译失败
+sed -i 's/GOTOOLCHAIN=local/GOTOOLCHAIN=auto/g' feeds/packages/lang/golang/golang-build.sh 2>/dev/null || true
+
 # 修改默认IP为 192.168.5.3
 sed -i 's/192.168.1.1/192.168.5.3/g' package/base-files/files/bin/config_generate
 
