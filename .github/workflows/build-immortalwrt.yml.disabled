@@ -1,4 +1,4 @@
-name: Build LEDE x86_64
+name: Build ImmortalWrt x86_64
 
 on:
   workflow_dispatch:
@@ -6,9 +6,9 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/build-lede.yml'
-      - 'configs/x86_64-lede.config'
-      - 'diy-lede.sh'
+      - '.github/workflows/build-immortalwrt.yml'
+      - 'configs/x86_64-immortalwrt.config'
+      - 'diy_part/**'
 
 jobs:
   build:
@@ -27,33 +27,34 @@ jobs:
           sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* 2>/dev/null || true
           sudo -E apt-get update
           sudo -E apt-get full-upgrade -y
-          sudo -E apt-get install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool llvm lrzsz libnsl-dev ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          sudo -E apt-get install -y $(cat diy_part/immortalwrt_dependence)
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
           df -h
 
-      - name: Clone OpenWrt source
+      - name: Clone ImmortalWrt source
         run: |
-          git clone --depth 1 https://github.com/coolsnowwolf/lede -b master openwrt
+          git clone --depth 1 https://github.com/immortalwrt/immortalwrt -b openwrt-24.10 openwrt
+
+      - name: DIY Part1 (Feeds 检查与注入)
+        run: |
+          chmod +x diy_part/immortalwrt_diy/diy-part1.sh
+          cd openwrt
+          bash "../diy_part/immortalwrt_diy/diy-part1.sh"
 
       - name: Setup feeds
         run: |
           cd openwrt
-          sed -i '1i src-git small https://github.com/kenzok8/small\nsrc-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
           ./scripts/feeds update -a
-          ./scripts/feeds install -a 2>&1 | tee feeds-install.log
-          echo "exit code: ${PIPESTATUS[0]}"
-          echo "=== 最后20行 ==="
-          tail -20 feeds-install.log
-          exit ${PIPESTATUS[0]}
+          ./scripts/feeds install -a
 
-      - name: Load config
+      - name: Load config & DIY Part2
         run: |
           [ -e files ] && cp -rf files openwrt/files
-          cp -f configs/x86_64-lede.config openwrt/.config
-          chmod +x diy-lede.sh
+          cp -f configs/x86_64-immortalwrt.config openwrt/.config
+          chmod +x diy_part/immortalwrt_diy/diy-part2.sh
           cd openwrt
-          "${GITHUB_WORKSPACE}/diy-lede.sh"
+          bash "../diy_part/immortalwrt_diy/diy-part2.sh"
 
       - name: Make defconfig & Download packages
         run: |
@@ -62,11 +63,16 @@ jobs:
           make download -j$(nproc) || make download -j1 V=s
           find dl -size -1024c -exec rm -f {} \;
 
+      - name: DIY Part3 (编译前优化)
+        run: |
+          cd openwrt
+          bash "../diy_part/immortalwrt_diy/diy-part3.sh"
+
       - name: Compile firmware
         run: |
           cd openwrt
           echo "$(nproc) thread build"
-          make -j$(nproc) || make -j1 V=s
+          make -j$(nproc) 2>&1 | perl -nE 'BEGIN{$|=1; $t0=time} $t=time; printf "[%5ds] %s", $t-$t0, $_' || make -j1 V=s
           df -h
 
       - name: Organize firmware
@@ -85,4 +91,4 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
           files: ${{ env.FIRMWARE }}/*
-          name: LEDE x86_64 ${{ steps.tag.outputs.release_tag }}
+          name: ImmortalWrt x86_64 ${{ steps.tag.outputs.release_tag }}
