@@ -201,13 +201,25 @@ jobs:
         run: |
           cd openwrt
           echo "$(nproc) thread build — ${{ matrix.value.RELEASE_PREFIX }} ${{ matrix.value.CONFIG_NAME }}"
+          set -o pipefail
           make -j$(nproc) 2>&1 | perl -nE 'BEGIN{$|=1; $t0=time} $t=time; printf "[%5ds] %s", $t-$t0, $_' || make -j1 V=s
           df -h
 
       - name: Organize firmware
         run: |
-          cd openwrt/bin/targets/*/*
+          echo "=== 固件目录结构 ==="
+          find openwrt/bin/targets -type f -name "*.img.gz" -o -name "*.manifest" -o -name "*.buildinfo" 2>/dev/null | sort
+          FIRMWARE_DIR=$(ls -d openwrt/bin/targets/*/* 2>/dev/null | head -1)
+          if [ -z "$FIRMWARE_DIR" ]; then
+            echo "❌ 错误：找不到固件目录！"
+            ls -R openwrt/bin/targets/ 2>/dev/null || echo "bin/targets 为空"
+            exit 1
+          fi
+          echo "固件目录: $FIRMWARE_DIR"
+          cd "$FIRMWARE_DIR"
           rm -rf packages
+          echo "=== 最终上传文件 ==="
+          ls -lah
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
       - name: Generate release tag

@@ -10,7 +10,7 @@ source_code_platforms=(lede immortalwrt)
 lede_value='{"PLATFORM":"lede","REPO_URL":"https://github.com/coolsnowwolf/lede","REPO_BRANCH":"master","CONFIG_FILE":"configs/x86_64-lede.config","CONFIG_NAME":"x86_64","DIY_P1":"diy_part/lede_diy/diy-part1.sh","DIY_P2":"diy_part/lede_diy/diy-part2.sh","DIY_P3":"diy_part/lede_diy/diy-part3.sh","DEPENDENCE":"diy_part/lede_dependence","SEED_CONFIG":"configs/seed/lede_seed.config","RELEASE_PREFIX":"LEDE"}'
 
 # ImmortalWrt 平台配置（单行 JSON，不可换行）
-immortalwrt_value='{"PLATFORM":"immortalwrt","REPO_URL":"https://github.com/immortalwrt/immortalwrt","REPO_BRANCH":"openwrt-24.10","CONFIG_FILE":"configs/x86_64-immortalwrt.config","CONFIG_NAME":"x86_64","DIY_P1":"diy_part/immortalwrt_diy/diy-part1.sh","DIY_P2":"diy_part/immortalwrt_diy/diy-part2.sh","DIY_P3":"diy_part/immortalwrt_diy/diy-part3.sh","DEPENDENCE":"diy_part/immortalwrt_dependence","SEED_CONFIG":"configs/seed/immortalwrt_seed.config","RELEASE_PREFIX":"ImmortalWrt"}'
+immortalwrt_value='{"PLATFORM":"immortalwrt","REPO_URL":"https://github.com/immortalwrt/immortalwrt","REPO_BRANCH":"openwrt-25.12","CONFIG_FILE":"configs/x86_64-immortalwrt.config","CONFIG_NAME":"x86_64","DIY_P1":"diy_part/immortalwrt_diy/diy-part1.sh","DIY_P2":"diy_part/immortalwrt_diy/diy-part2.sh","DIY_P3":"diy_part/immortalwrt_diy/diy-part3.sh","DEPENDENCE":"diy_part/immortalwrt_dependence","SEED_CONFIG":"configs/seed/immortalwrt_seed.config","RELEASE_PREFIX":"ImmortalWrt"}'
 
 # 生成 matrix JSON
 matrix_json="["
