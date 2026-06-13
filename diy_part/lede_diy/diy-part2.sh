@@ -19,10 +19,24 @@ HIGHEST=$(printf "%s\n%s" "$KERNEL_VER" "$TESTING_VER" | sort -V | tail -1)
 if [ "$HIGHEST" = "$TESTING_VER" ] && [ "$TESTING_VER" != "$KERNEL_VER" ]; then
   sed -i 's/.*CONFIG_TESTING_KERNEL.*/CONFIG_TESTING_KERNEL=y/' .config
   sed -i 's/.*CONFIG_PACKAGE_kmod-mdio-devres.*/CONFIG_PACKAGE_kmod-mdio-devres=y/' .config
+  SELECTED_VER="$TESTING_VER"
   echo "✓ 使用 testing 内核: $TESTING_VER"
 else
   sed -i 's/.*CONFIG_TESTING_KERNEL.*/# CONFIG_TESTING_KERNEL is not set/' .config
+  SELECTED_VER="$KERNEL_VER"
   echo "✓ 使用稳定内核: $KERNEL_VER"
+fi
+
+# 确保 .config 中的 CONFIG_LINUX_X_XX 与实际内核版本一致
+CONFIGURED_KERNEL=$(grep -oP 'CONFIG_LINUX_\K[0-9_]+(?==y)' .config 2>/dev/null | head -1 | tr '_' '.')
+if [ -n "$CONFIGURED_KERNEL" ] && [ "$CONFIGURED_KERNEL" != "$SELECTED_VER" ]; then
+  echo "⚠ .config 内核版本 ($CONFIGURED_KERNEL) 与源码树 ($SELECTED_VER) 不一致，自动修正..."
+  sed -i '/CONFIG_LINUX_[0-9]_[0-9]*=/d' .config
+  KERNEL_UNDERSCORE=$(echo "$SELECTED_VER" | tr '.' '_')
+  echo "CONFIG_LINUX_${KERNEL_UNDERSCORE}=y" >> .config
+  echo "✓ 已修正为内核 $SELECTED_VER"
+else
+  echo "✓ 内核版本 $SELECTED_VER 与源码树一致"
 fi
 
 # 修改默认IP为 192.168.5.3

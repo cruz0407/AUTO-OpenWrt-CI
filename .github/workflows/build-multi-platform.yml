@@ -72,9 +72,10 @@ jobs:
       - name: Restore cache from GHCR
         run: |
           REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          PLATFORM_TAG=$(echo "${{ matrix.value.PLATFORM }}-${{ matrix.value.CONFIG_NAME }}" | tr '[:upper:]' '[:lower:]')
+          OS_VER=$(lsb_release -rs)
+          PLATFORM_TAG=$(echo "${{ matrix.value.PLATFORM }}-${{ matrix.value.CONFIG_NAME }}-ubuntu${OS_VER}" | tr '[:upper:]' '[:lower:]')
           IMAGE_TAG="ghcr.io/${REPO_OWNER_LOWER}/openwrt-cache-${PLATFORM_TAG}:latest"
-          echo "Cache image: $IMAGE_TAG"
+          echo "缓存镜像: $IMAGE_TAG"
 
           if docker pull "$IMAGE_TAG" 2>/dev/null; then
             docker create --name cache_tmp "$IMAGE_TAG" /bin/true
@@ -187,7 +188,8 @@ jobs:
           done
 
           REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          PLATFORM_TAG=$(echo "${{ matrix.value.PLATFORM }}-${{ matrix.value.CONFIG_NAME }}" | tr '[:upper:]' '[:lower:]')
+          OS_VER=$(lsb_release -rs)
+          PLATFORM_TAG=$(echo "${{ matrix.value.PLATFORM }}-${{ matrix.value.CONFIG_NAME }}-ubuntu${OS_VER}" | tr '[:upper:]' '[:lower:]')
           IMAGE_TAG="ghcr.io/${REPO_OWNER_LOWER}/openwrt-cache-${PLATFORM_TAG}:latest"
 
           echo "构建缓存镜像: $IMAGE_TAG ($((count - 1)) layers)"
