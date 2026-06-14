@@ -16,5 +16,11 @@ if [ -f feeds/kenzo/smartdns/Makefile ] && ! grep -q '+zlib' feeds/kenzo/smartdn
   echo "✓ 已修复 smartdns 缺少 zlib 依赖"
 fi
 
+# 修复 luci-app-dockerman 的幽灵依赖 luci-lib-docker（该包不存在于任何 feed）
+if [ -f feeds/kenzo/luci-app-dockerman/Makefile ] && grep -q '+luci-lib-docker' feeds/kenzo/luci-app-dockerman/Makefile 2>/dev/null; then
+  sed -i '/+luci-lib-docker/d' feeds/kenzo/luci-app-dockerman/Makefile
+  echo "✓ 已移除 luci-app-dockerman 的幽灵依赖 luci-lib-docker"
+fi
+
 echo "DIY Part3: 无需额外操作（占位）"
 echo "DIY Part3 完成！"
