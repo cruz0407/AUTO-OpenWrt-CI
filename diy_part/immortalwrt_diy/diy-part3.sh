@@ -12,7 +12,7 @@ echo "=========================================="
 
 # 修复 smartdns 缺少 zlib 依赖声明（kenzo feed 上游 Makefile 未声明 DEPENDS:=+zlib）
 if [ -f feeds/kenzo/smartdns/Makefile ] && ! grep -q '+zlib' feeds/kenzo/smartdns/Makefile 2>/dev/null; then
-  sed -i 's/^DEPENDS:=/DEPENDS:=+zlib /' feeds/kenzo/smartdns/Makefile
+  sed -i 's/DEPENDS:=/DEPENDS:=+zlib /' feeds/kenzo/smartdns/Makefile
   echo "✓ 已修复 smartdns 缺少 zlib 依赖"
 fi
 
