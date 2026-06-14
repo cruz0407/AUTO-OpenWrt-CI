@@ -15,6 +15,6 @@ export repos=(
 clone_custom_packages() {
   mkdir -p package/custom_packages
 
-  # 在这里添加需要 clone 的自定义包
-  # git clone https://github.com/xxx/yyy package/custom_packages/yyy
+  # luci-app-dockerman 的依赖库（kenzo feed 未包含）
+  git clone https://github.com/lisaac/luci-lib-docker package/custom_packages/luci-lib-docker
 }
