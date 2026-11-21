@@ -209,16 +209,22 @@ jobs:
 
       - name: Organize firmware
         run: |
-          echo "=== 固件目录结构 ==="
-          find openwrt/bin/targets -type f -name "*.img.gz" -o -name "*.manifest" -o -name "*.buildinfo" 2>/dev/null | sort
-          FIRMWARE_DIR=$(ls -d openwrt/bin/targets/*/* 2>/dev/null | head -1)
-          if [ -z "$FIRMWARE_DIR" ]; then
-            echo "❌ 错误：找不到固件目录！"
-            ls -R openwrt/bin/targets/ 2>/dev/null || echo "bin/targets 为空"
+          FIRMWARE_DIR=openwrt/bin/targets/x86/64
+          if [ ! -d "$FIRMWARE_DIR" ]; then
+            echo "❌ 错误：找不到固件目录 $FIRMWARE_DIR"
             exit 1
           fi
-          echo "固件目录: $FIRMWARE_DIR"
           cd "$FIRMWARE_DIR"
+          IMAGE=$(find . -maxdepth 1 -type f -size +0c \( \
+            -name '*-combined.img' -o -name '*-combined.img.gz' -o \
+            -name '*-combined-efi.img' -o -name '*-combined-efi.img.gz' \
+          \) -print -quit)
+          if [ -z "$IMAGE" ]; then
+            echo "❌ 错误：找不到非空的 x86_64 combined 固件镜像"
+            ls -lah
+            exit 1
+          fi
+          echo "固件镜像: $IMAGE"
           rm -rf packages
           echo "=== 最终上传文件 ==="
           ls -lah
