@@ -39,6 +39,12 @@ cat feeds.conf.default
 echo "=========================================="
 
 # 克隆自定义包
-clone_custom_packages
+clone_custom_packages || exit 1
+
+# LEDE 的 LuCI 通过 zh-cn 目录识别简体中文翻译。
+bandix_po=package/custom_packages/luci-app-bandix-plus/luci-app-bandix-plus/po
+if [ ! -d "$bandix_po/zh-cn" ]; then
+  cp -R "$bandix_po/zh_Hans" "$bandix_po/zh-cn" || exit 1
+fi
 
 echo "DIY Part1 完成！"
