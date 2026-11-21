@@ -116,6 +116,9 @@ jobs:
           cd openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+          TURBOACC_DIR=package/feeds/lienol/luci-app-turboacc
+          test -f "$TURBOACC_DIR/Makefile"
+          patch --batch --forward -d "$TURBOACC_DIR" -p1 < ../diy_part/turboacc-firewall4.patch
 
       - name: Load config & DIY Part2
         run: |
@@ -130,7 +133,8 @@ jobs:
         run: |
           cd openwrt
           make defconfig
-          for pkg in bandix-plus luci-app-bandix-plus luci-i18n-bandix-plus-zh-cn kmod-sched-core kmod-sched-bpf; do
+          for pkg in bandix-plus luci-app-bandix-plus luci-i18n-bandix-plus-zh-cn kmod-sched-core kmod-sched-bpf \
+            luci-app-turboacc luci-app-turboacc_INCLUDE_OFFLOADING kmod-nft-offload kmod-nft-fullcone; do
             if ! grep -Fxq "CONFIG_PACKAGE_${pkg}=y" .config; then
               echo "::error::${pkg} was not selected after make defconfig"
               exit 1
