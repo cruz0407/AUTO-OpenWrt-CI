@@ -9,6 +9,7 @@ export repos=(
   "src-git small https://github.com/kenzok8/small"
   "src-git kenzo https://github.com/kenzok8/openwrt-packages"
   "src-git ghfu https://github.com/smallprogram/luci-app-ghfu.git;main"
+  "src-git lienol https://github.com/Lienol/openwrt-package"
 )
 
 # 克隆自定义软件包到 package/custom_packages/
