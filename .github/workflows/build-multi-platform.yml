@@ -73,6 +73,7 @@ jobs:
           echo "Docker data-root: $(docker info | grep 'Docker Root Dir')"
 
       - name: Restore cache from GHCR
+        if: github.ref == 'refs/heads/master'
         run: |
           REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           OS_VER=$(lsb_release -rs)
@@ -143,7 +144,7 @@ jobs:
           if (( ${#missing[@]} )); then
             echo "::error::LuCI apps missing after make defconfig: ${missing[*]}"
             for pkg in "${missing[@]}" luci-lib-taskd taskd luci-lib-xterm script-utils coreutils-stty libuci-lua mount-utils tar; do
-              grep -A 12 -Fx "config PACKAGE_${pkg}" tmp/.config-package.in || true
+              grep -A 12 -E "^[[:blank:]]*config PACKAGE_${pkg}$" tmp/.config-package.in || true
               grep -E "^(# )?CONFIG_PACKAGE_${pkg}(=| is not set)" .config || true
             done
             exit 1
