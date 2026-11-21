@@ -34,6 +34,12 @@ else
   echo "✓ 内核版本 $SELECTED_VER 与源码树一致"
 fi
 
+# opkg uses -N for the package release, while APK uses -rN.
+homeproxy_mk=package/feeds/small/luci-app-homeproxy/Makefile
+if [ -f "$homeproxy_mk" ]; then
+  sed -i -E '/^LUCI_EXTRA_DEPENDS:=sing-box /s/-r([0-9]+)\)/-\1)/' "$homeproxy_mk" || exit 1
+fi
+
 # 修改默认IP为 192.168.5.3
 sed -i 's/192.168.1.1/192.168.5.3/g' package/base-files/files/bin/config_generate
 echo "✓ 默认 IP: 192.168.5.3"
