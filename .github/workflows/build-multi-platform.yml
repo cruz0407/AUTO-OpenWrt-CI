@@ -133,6 +133,17 @@ jobs:
         run: |
           cd openwrt
           make defconfig
+          sed -nE 's/^CONFIG_PACKAGE_(luci-app-[[:alnum:].+-]+)=y$/\1/p' \
+            ../configs/x86_64-lede.config ../configs/seed/lede_seed.config | sort -u > expected-luci-apps.txt
+          test -s expected-luci-apps.txt
+          missing=()
+          while IFS= read -r pkg; do
+            grep -Fxq "CONFIG_PACKAGE_${pkg}=y" .config || missing+=("$pkg")
+          done < expected-luci-apps.txt
+          if (( ${#missing[@]} )); then
+            echo "::error::LuCI apps missing after make defconfig: ${missing[*]}"
+            exit 1
+          fi
           for pkg in bandix-plus luci-app-bandix-plus luci-i18n-bandix-plus-zh-cn kmod-sched-core kmod-sched-bpf \
             luci-app-turboacc luci-app-turboacc_INCLUDE_OFFLOADING kmod-nft-offload kmod-nft-fullcone; do
             if ! grep -Fxq "CONFIG_PACKAGE_${pkg}=y" .config; then
@@ -158,6 +169,7 @@ jobs:
           time make toolchain/compile -j$(nproc) || exit 1
 
       - name: Checkpoint cache save
+        if: github.ref == 'refs/heads/master'
         run: |
           cd openwrt
           # 检查是否有新编译产物
@@ -231,6 +243,18 @@ jobs:
             exit 1
           fi
           echo "固件目录: $FIRMWARE_DIR"
+          shopt -s nullglob
+          manifests=("$FIRMWARE_DIR"/*.manifest)
+          if (( ${#manifests[@]} != 1 )); then
+            echo '::error::Expected one x86_64 firmware package manifest'
+            exit 1
+          fi
+          awk '{print $1}' "${manifests[0]}" | sort -u > /tmp/openwrt-manifest-packages.txt
+          missing=$(comm -23 openwrt/expected-luci-apps.txt /tmp/openwrt-manifest-packages.txt)
+          if [[ -n "$missing" ]]; then
+            echo "::error::LuCI apps missing from firmware: $(echo "$missing" | paste -sd ' ' -)"
+            exit 1
+          fi
           cd "$FIRMWARE_DIR"
           rm -rf packages
           echo "=== 最终上传文件 ==="
@@ -243,6 +267,7 @@ jobs:
           echo "release_tag=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
 
       - name: Upload firmware to release
+        if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}-${{ matrix.value.PLATFORM }}
