@@ -142,6 +142,10 @@ jobs:
           done < expected-luci-apps.txt
           if (( ${#missing[@]} )); then
             echo "::error::LuCI apps missing after make defconfig: ${missing[*]}"
+            for pkg in "${missing[@]}" luci-lib-taskd taskd luci-lib-xterm script-utils coreutils-stty libuci-lua mount-utils tar; do
+              grep -A 12 -Fx "config PACKAGE_${pkg}" tmp/.config-package.in || true
+              grep -E "^(# )?CONFIG_PACKAGE_${pkg}(=| is not set)" .config || true
+            done
             exit 1
           fi
           for pkg in bandix-plus luci-app-bandix-plus luci-i18n-bandix-plus-zh-cn kmod-sched-core kmod-sched-bpf \
