@@ -130,6 +130,12 @@ jobs:
         run: |
           cd openwrt
           make defconfig
+          for pkg in bandix-plus luci-app-bandix-plus luci-i18n-bandix-plus-zh-cn kmod-sched-core kmod-sched-bpf; do
+            if ! grep -Fxq "CONFIG_PACKAGE_${pkg}=y" .config; then
+              echo "::error::${pkg} was not selected after make defconfig"
+              exit 1
+            fi
+          done
           make download -j$(nproc) || make download -j1 V=s
           find dl -size -1024c -exec rm -f {} \;
 

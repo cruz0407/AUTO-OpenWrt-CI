@@ -39,6 +39,6 @@ cat feeds.conf.default
 echo "=========================================="
 
 # 克隆自定义包
-clone_custom_packages
+clone_custom_packages || exit 1
 
 echo "DIY Part1 完成！"
