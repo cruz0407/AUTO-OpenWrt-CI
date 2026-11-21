@@ -1,6 +1,9 @@
 name: Build Multi-Platform OpenWrt
 
 on:
+  schedule:
+    # 03:17 Beijing time (UTC+8).
+    - cron: '17 19 * * *'
   workflow_dispatch:
     inputs:
       ssh:
