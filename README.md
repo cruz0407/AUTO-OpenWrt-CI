@@ -1,46 +1,28 @@
-[English](README-en.md) ←
+[English](README-en.md)
 
-# 借助 GitHub Actions 的 OpenWrt 在线集成自动编译.
+# AUTO-OpenWrt-CI
 
-## [![Build](https://img.shields.io/github/workflow/status/KFERMercer/OpenWrt/OpenWrt-CI/master?)](https://github.com/KFERMercer/OpenWrt/actions?query=workflow%3AOpenWrt-CI) [![Release](https://img.shields.io/github/release/KFERMercer/OpenWrt-CI?color=blue)](https://github.com/KFERMercer/OpenWrt-CI/releases)
+通过 GitHub Actions 构建 LEDE 和 ImmortalWrt 的 x86_64 固件。
 
-支持自动定制固件, 自动调整依赖及生成配置文件, 无需上传配置. 兼容 [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) 以及 OpenWrt trunk.
+## 下载固件
 
-同时支持自动合并推送上游提交 (也就是自动更新), 直接把`merge-upstream.yml`放入`.github/workflows/`即可 (默认上游为 coolsnowwolf/lede, 高级玩家请自行改写).
+在 [Releases](https://github.com/cruz0407/AUTO-OpenWrt-CI/releases) 中按标签后缀选择 `-lede` 或 `-immortalwrt`。下载与启动方式匹配的 `combined` 镜像，并用同一 Release 中的 `sha256sums` 核对文件。`combined-efi.img.gz` 适用于 UEFI。
 
-感谢[P3TERX](https://github.com/P3TERX/Actions-OpenWrt)珠玉在前.
+## 运行构建
 
-## 使用教程:
+1. Fork 本仓库并在 **Actions** 中启用工作流。
+2. 打开 **Build Multi-Platform OpenWrt**，选择 **Run workflow**。工作流会分别构建两个平台。
+3. 到 **Actions** 查看每个平台的日志。编译且产物检查通过后，每个平台会在当前仓库创建自己的 Release。
 
-### 在一切开始前, 你需要的是:
+向 `master` 推送时，修改现用工作流、`configs/`、`diy_part/` 或 `compile_script/` 会自动触发构建。
 
-- GitHub 账号
-- 申请使用 GitHub Actions
-- [基本的Git技能](https://www.liaoxuefeng.com/wiki/896043488029600)
-- 自己的OpenWrt分支 ([Lean源](https://github.com/coolsnowwolf/lede)或者[官方源](https://github.com/openwrt/openwrt/))
-- 脑子
+## 自定义配置
 
-### 相关文章: 作者-糖炒栗子 
+| 平台 | 上游分支 | 固件配置 | 定制脚本 |
+| --- | --- | --- | --- |
+| LEDE | `coolsnowwolf/lede` 的 `master` | [`configs/x86_64-lede.config`](configs/x86_64-lede.config) | [`diy_part/lede_diy/`](diy_part/lede_diy/) |
+| ImmortalWrt | `immortalwrt/immortalwrt` 的 `openwrt-25.12` | [`configs/x86_64-immortalwrt.config`](configs/x86_64-immortalwrt.config) | [`diy_part/immortalwrt_diy/`](diy_part/immortalwrt_diy/) |
 
-- [面向小白的Github_Action使用workflow自动编译lean_openwrt教程](https://zhuanlan.zhihu.com/p/94402324)
-- [关于Github Action自动编译Lean_Openwrt的配置修改问题](https://zhuanlan.zhihu.com/p/94527343)
+平台和上游分支定义在 [`compile_script/platforms.sh`](compile_script/platforms.sh)。CI 在执行 `make defconfig` 前会追加 [`configs/seed/`](configs/seed/) 下对应平台的配置。工作流使用 GHCR 保存构建缓存。
 
-### 1. 注册GitHub账号并开启GitHub Actions (自行搜索方法).
-
-### 2. fork [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede) 或者 [OpenWrt trunk](https://github.com/openwrt/openwrt).
-
-### 3. 上传`openwrt-ci.yml`和`merge-upstream.yml`到`/.github/workflows/`下.
-
-### 4. 定制固件:
-
-> 如果你希望定制你的固件:
-
-代码里的注释部分详细介绍了如何在脚本中客制化你的固件. 简单来说, 你只需要解除注释相应行即可.
-
-### 5. 大功告成.
-
-集成编译环境会自动开始编译. 现在返回你的库首页, 点击页面上方的`Actions`按钮就可以查看进度.
-
-> ### 如何下载到编译完成的固件?
-
-进入`Actions`标签页后, 如果相应的集成活动顺利完成 (显示为绿色), 点击页面右上方的`Artifacts`即可看到你的固件 (通常是一个压缩包). 点击即可开始下载.
+感谢 [P3TERX](https://github.com/P3TERX/Actions-OpenWrt) 和 [KFERMercer](https://github.com/KFERMercer/OpenWrt-CI) 的早期工作。
