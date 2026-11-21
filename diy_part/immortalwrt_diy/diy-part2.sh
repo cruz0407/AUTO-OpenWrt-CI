@@ -7,9 +7,10 @@ echo "=========================================="
 echo "  ImmortalWrt DIY Part2: 配置定制"
 echo "=========================================="
 
-# 修复 golang 版本过低导致 xray-core 等包编译失败
-sed -i 's/GOTOOLCHAIN=local/GOTOOLCHAIN=auto/g' feeds/packages/lang/golang/golang-build.sh 2>/dev/null || true
-echo "✓ GOTOOLCHAIN=auto"
+# Go 软件包可按 go.mod 要求升级构建用工具链。
+go_package_mk=feeds/packages/lang/golang/golang-package.mk
+sed -i 's/GOTOOLCHAIN=local/GOTOOLCHAIN=auto/' "$go_package_mk" || exit 1
+grep -q 'GOTOOLCHAIN=auto' "$go_package_mk" || exit 1
 
 # 修改默认IP为 192.168.5.3
 sed -i 's/192.168.1.1/192.168.5.3/g' package/base-files/files/bin/config_generate

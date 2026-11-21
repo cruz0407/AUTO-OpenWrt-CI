@@ -7,25 +7,20 @@ echo "=========================================="
 echo "  LEDE DIY Part2: 配置定制"
 echo "=========================================="
 
-# 修复 Go 版本过旧导致 go.mod ignore/tool 指令解析失败
-# kenzo feed 的 AdGuardHome 等新包使用了 Go 1.24+ 特性
-sed -i 's/GOTOOLCHAIN=local/GOTOOLCHAIN=auto/g' feeds/packages/lang/golang/golang-build.sh 2>/dev/null || true
-echo "✓ GOTOOLCHAIN=auto"
+# Go 软件包可按 go.mod 要求升级构建用工具链。
+go_package_mk=feeds/packages/lang/golang/golang-package.mk
+sed -i 's/GOTOOLCHAIN=local/GOTOOLCHAIN=auto/' "$go_package_mk" || exit 1
+grep -q 'GOTOOLCHAIN=auto' "$go_package_mk" || exit 1
 
-# 自动判断内核版本：testing 版本更高则启用 CONFIG_TESTING_KERNEL
-KERNEL_VER=$(grep 'KERNEL_PATCHVER:=' target/linux/x86/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
-TESTING_VER=$(grep 'KERNEL_TESTING_PATCHVER:=' target/linux/x86/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
-HIGHEST=$(printf "%s\n%s" "$KERNEL_VER" "$TESTING_VER" | sort -V | tail -1)
-if [ "$HIGHEST" = "$TESTING_VER" ] && [ "$TESTING_VER" != "$KERNEL_VER" ]; then
-  sed -i 's/.*CONFIG_TESTING_KERNEL.*/CONFIG_TESTING_KERNEL=y/' .config
-  sed -i 's/.*CONFIG_PACKAGE_kmod-mdio-devres.*/CONFIG_PACKAGE_kmod-mdio-devres=y/' .config
-  SELECTED_VER="$TESTING_VER"
-  echo "✓ 使用 testing 内核: $TESTING_VER"
-else
-  sed -i 's/.*CONFIG_TESTING_KERNEL.*/# CONFIG_TESTING_KERNEL is not set/' .config
-  SELECTED_VER="$KERNEL_VER"
-  echo "✓ 使用稳定内核: $KERNEL_VER"
+# 测试内核的 xt_FLOWOFFLOAD 与当前内核 API 不兼容。
+SELECTED_VER=$(awk -F ':=' '/^KERNEL_PATCHVER:=/ {print $2; exit}' target/linux/x86/Makefile)
+if [ -z "$SELECTED_VER" ]; then
+  echo '无法确定 LEDE x86 稳定内核版本' >&2
+  exit 1
 fi
+sed -i '/^CONFIG_TESTING_KERNEL=/d; /^# CONFIG_TESTING_KERNEL is not set$/d' .config || exit 1
+echo '# CONFIG_TESTING_KERNEL is not set' >> .config
+echo "✓ 使用稳定内核: $SELECTED_VER"
 
 # 确保 .config 中的 CONFIG_LINUX_X_XX 与实际内核版本一致
 CONFIGURED_KERNEL=$(grep -oP 'CONFIG_LINUX_\K[0-9_]+(?==y)' .config 2>/dev/null | head -1 | tr '_' '.')
